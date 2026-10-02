@@ -6,37 +6,22 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+permissions:
+  contents: read
+
 jobs:
   test-database:
     runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: db_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+    timeout-minutes: 10
 
     steps:
       - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
 
-      - name: Instalar cliente MySQL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mysql-client
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
 
-      - name: Ejecutar script de migracion en MySQL
-        run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword db_test < migraciones/v1_esquema_inicial.sql
-
-      - name: Verificar tablas creadas
-        run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword db_test -e "SHOW TABLES; SELECT * FROM usuarios;"
+      - name: Probar migraciones (instalacion, upgrade, idempotencia)
+        run: python scripts/restore_test.py
