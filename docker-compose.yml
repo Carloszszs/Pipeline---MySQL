@@ -1,0 +1,24 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql_local
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Copia .env.example a .env y define MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-db_test}
+    ports:
+      # Solo accesible desde tu PC (no desde la red local). DBeaver usa este puerto.
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    command:
+      - --performance-schema=OFF
+      - --innodb-buffer-pool-size=128M
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql_data:
