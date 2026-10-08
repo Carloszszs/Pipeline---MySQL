@@ -1,3 +1,6 @@
 .env
 .clj-kondo
 .lsp
+__pycache__/
+*.py[cod]
+backups/
